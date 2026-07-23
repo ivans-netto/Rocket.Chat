@@ -1,4 +1,4 @@
-import type { ISubscription, ThemePreference } from '@rocket.chat/core-typings';
+import type { ISidebarCustomCategory, ISubscription, ThemePreference } from '@rocket.chat/core-typings';
 import type { ServerMethods } from '@rocket.chat/ddp-client';
 import { Subscriptions, Users } from '@rocket.chat/models';
 import type { FontSize } from '@rocket.chat/rest-typings';
@@ -45,6 +45,8 @@ type UserPreferences = {
 	sidebarViewMode: string;
 	sidebarDisplayAvatar: boolean;
 	sidebarGroupByType: boolean;
+	sidebarShowCustomCategories: boolean;
+	sidebarCustomCategories: ISidebarCustomCategory[];
 	muteFocusedConversations: boolean;
 	dontAskAgainList: { action: string; label: string }[];
 	themeAppearence: ThemePreference;
@@ -120,6 +122,8 @@ export const saveUserPreferences = async (settings: Partial<UserPreferences>, us
 		sidebarViewMode: Match.Optional(String),
 		sidebarDisplayAvatar: Match.Optional(Boolean),
 		sidebarGroupByType: Match.Optional(Boolean),
+		sidebarShowCustomCategories: Match.Optional(Boolean),
+		sidebarCustomCategories: Match.Optional([Match.ObjectIncluding({ _id: String, name: String })]),
 		muteFocusedConversations: Match.Optional(Boolean),
 		themeAppearence: Match.Optional(String),
 		fontSize: Match.Optional(String),

@@ -1,38 +1,57 @@
-import type { ISubscription } from '@rocket.chat/core-typings';
-import { Badge, SidebarV2CollapseGroup } from '@rocket.chat/fuselage';
+import { Badge, Box, SidebarV2CollapseGroup } from '@rocket.chat/fuselage';
+import type { TranslationKey } from '@rocket.chat/ui-contexts';
 import type { HTMLAttributes, KeyboardEvent, MouseEventHandler } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import CategoryMenu from '../categories/CategoryMenu';
+import type { SidebarRoomListGroup } from '../hooks/useRoomList';
 import { useUnreadDisplay } from '../hooks/useUnreadDisplay';
 
-export type RoomListCollapserProps = {
-	groupTitle: string;
-	collapsedGroups: string[];
+type RoomListCollapserProps = {
+	group: SidebarRoomListGroup;
+	canMoveUp: boolean;
+	canMoveDown: boolean;
+	onMoveUp: () => void;
+	onMoveDown: () => void;
 	onClick: MouseEventHandler<HTMLElement>;
 	onKeyDown: (e: KeyboardEvent) => void;
-	unreadCount: Pick<ISubscription, 'userMentions' | 'groupMentions' | 'unread' | 'tunread' | 'tunreadUser' | 'tunreadGroup'>;
 } & Omit<HTMLAttributes<HTMLElement>, 'onClick' | 'onKeyDown'>;
-const RoomListCollapser = ({ groupTitle, unreadCount: unreadGroupCount, collapsedGroups, ...props }: RoomListCollapserProps) => {
+
+const RoomListCollapser = ({ group, canMoveUp, canMoveDown, onMoveUp, onMoveDown, ...props }: RoomListCollapserProps) => {
 	const { t } = useTranslation();
 
-	const { unreadTitle, unreadVariant, showUnread, unreadCount } = useUnreadDisplay(unreadGroupCount);
+	const { unreadTitle, unreadVariant, showUnread, unreadCount } = useUnreadDisplay(group.unreadInfo);
+
+	const title = group.translateTitle ? t(group.title as TranslationKey) : group.title;
 
 	return (
-		<SidebarV2CollapseGroup
-			title={t(groupTitle)}
-			expanded={!collapsedGroups.includes(groupTitle)}
-			badge={
-				showUnread ? (
-					<Badge variant={unreadVariant} title={unreadTitle} aria-label={unreadTitle} role='status'>
-						{unreadCount.total}
-					</Badge>
-				) : undefined
-			}
-			aria-label={
-				!collapsedGroups.includes(groupTitle) ? t('Collapse_group', { group: t(groupTitle) }) : t('Expand_group', { group: t(groupTitle) })
-			}
-			{...props}
-		/>
+		<Box style={{ opacity: group.empty ? 0.4 : undefined }}>
+			<SidebarV2CollapseGroup
+				title={title}
+				expanded={!group.collapsed}
+				badge={
+					showUnread ? (
+						<Badge variant={unreadVariant} title={unreadTitle} aria-label={unreadTitle} role='status'>
+							{unreadCount.total}
+						</Badge>
+					) : undefined
+				}
+				menu={
+					<CategoryMenu
+						category={group.category}
+						groupKey={group.key}
+						showUnreads={group.showUnreads}
+						keepUnreadsOnTop={group.keepUnreadsOnTop}
+						canMoveUp={canMoveUp}
+						canMoveDown={canMoveDown}
+						onMoveUp={onMoveUp}
+						onMoveDown={onMoveDown}
+					/>
+				}
+				aria-label={group.collapsed ? t('Expand_group', { group: title }) : t('Collapse_group', { group: title })}
+				{...props}
+			/>
+		</Box>
 	);
 };
 
